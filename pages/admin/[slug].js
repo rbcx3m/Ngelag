@@ -1,6 +1,7 @@
 import { useState} from 'react';
 import { useRouter } from 'next/router';
-import db from '@/lib/db';
+import { neon } from '@neondatabase/serverless';
+const sql = neon(process.env.DATABASE_URL);
 function slugify(title) {
   return title
     .toLowerCase()
@@ -14,7 +15,7 @@ const EditPost = ({ data }) => {
   const [slug, setSlug]  = useState(data.slug)
   const [title, setTitle] = useState(data.title);
   const [content, setContent] = useState(data.content);
-  const [img, setImg] = useState(data.img);
+  const [image, setImage] = useState(data.image);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   
@@ -25,10 +26,11 @@ try {
     const res = await fetch(`http://localhost:3000/api/posts/edit?id=${data.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, slug, content, img }),
+      body: JSON.stringify({ title, slug, content, image }),
     });
     if (res.ok) {
-      router.push(`/post/${slug}`);
+        alert('Post added!');
+      router.push(`/admin/${slug}`);
     } else {
       alert('Failed to update post');
     }
@@ -50,21 +52,33 @@ try {
       <h1>Edit Post</h1>
       <div>
         <label>Title:</label>
-        <textarea value={title} onChange={(e) => {
+        <input value={title} onChange={(e) => {
           setTitle(e.target.value);
           setSlug(slugify(e.target.value));
-          }} placeholder={title} />
+          }} placeholder={title}
+            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
+            required />
       </div>
       <div>
-        <label>Content:</label>
-        <textarea value={content} onChange={(e) => setContent(e.target.value)}
-         placeholder={content} />
-      </div>
-            <div>
-        <label>Image:</label>
-        <textarea value={img} onChange={(e) => setImg(e.target.value)}
-         placeholder={img} />
-      </div>
+          <label htmlFor="content" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Content</label>
+          <textarea
+            id="content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)} placeholder={content}
+            style={{ width: '100%', padding: '0.5rem', height: '100px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="image" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Image</label>
+          <input
+            id="image"
+            value={image}
+            onChange={(e) => setImage(e.target.value)} placeholder={image}
+            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
       <button type="submit">Save Changes</button>
     </form>
   );
@@ -74,10 +88,10 @@ export default EditPost;
 export const getServerSideProps = async ({ params }) => {
       const { slug } = params;
     try {
-       const [ data ] = db.prepare('SELECT * FROM posts WHERE slug = ?').all(slug);
+       const [ data ] = await sql `SELECT * FROM posts WHERE slug = ${slug} LIMIT 1`;
     return {
       props: {
-        data,
+        data: JSON.parse(JSON.stringify(data)),
       }
     };
   } catch (error) {

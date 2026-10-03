@@ -1,6 +1,13 @@
 const nextConfig = {
-  serverExternalPackages: ['better-sqlite3'],
-  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'blogger.googleusercontent.com',
+        pathname: '/img/b/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -88,8 +88,8 @@ body, p, h1, h2, h3 {
 
 input,
 button {
-    font-family: inherit;
     border: none;
+    font-family: inherit;
     outline: none;
 }
 

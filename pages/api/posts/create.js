@@ -1,4 +1,5 @@
-import db from "@/lib/db";
+import { neon } from '@neondatabase/serverless'
+const sql = neon(process.env.DATABASE_URL)
 
 function slugify(title) {
   return title
@@ -9,19 +10,17 @@ function slugify(title) {
     .replace(/^-+|-+$/g, '');     // Remove extra hyphens
 }
 
-export default function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+export default async function POST(req, res) {
+
+    const { title, description, content, image, tag, author } = req.body;
+    const slug = slugify(title);
 
   try {
-    const { title, desc, content, img, tag, author } = req.body;
-    const slug = slugify(title);
-    
-    const stmt = db.prepare('INSERT INTO posts (title, slug, desc, content, img, tag, author) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    const info = stmt.run(title, slug, desc, content, img, tag, author);
+    const result = await sql` INSERT INTO posts ( title, slug, description, content, image, tag, author )
+        VALUES ( ${title}, ${slug}, ${description}, ${content}, ${image}, ${tag}, ${author} )
+        RETURNING * `;
 
-    return res.status(201).json({ id: info.lastInsertRowid, title, slug, desc, content, img, tag, author });
+    return res.status(201).json(result);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

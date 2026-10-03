@@ -1,7 +1,7 @@
-import db from '@/lib/db';
-const items = db.prepare('SELECT * FROM posts ORDER BY id DESC').all();
+import { neon } from '@neondatabase/serverless';
+const sql = neon(process.env.DATABASE_URL);
+  const items = await sql.query('SELECT * FROM posts ORDER BY id DESC');
 
-  
 export default function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);

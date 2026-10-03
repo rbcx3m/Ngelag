@@ -1,9 +1,9 @@
-import db from '@/lib/db';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Layout from '@/components/Layout';
 import ImageFallback from '@/lib/ImageFallback';
 import Date from '@/lib/date';
-import ResponsiveHeroImage from '@/lib/image';
+import { neon } from '@neondatabase/serverless';
+const sql = neon(process.env.DATABASE_URL);
 
 export default function Home({ data }) {
     const [posts, setPosts] = useState(data)
@@ -28,6 +28,7 @@ export default function Home({ data }) {
       }
     }
 
+
   return (
     <Layout title="Ngelag.Site" description="A simple blog built with Next.js">
       {posts.map((post, index) => (
@@ -36,7 +37,7 @@ export default function Home({ data }) {
           <a href={`/post/${post.slug}`}><h3 className='title'>{post.title}</h3>
           <ImageFallback
              className='thumbnail' 
-             src={post.img} 
+             src={post.image} 
              alt={post.title} 
              width={0}
              height={0}
@@ -45,7 +46,7 @@ export default function Home({ data }) {
           />
           </a>
           <div className='desc'>
-            <p><Date dateString={post.date} /> - {post.desc}</p>
+            <p><Date dateString={post.date} /> - {post.description}</p>
           </div>
           </div>
         </div>
@@ -65,15 +66,14 @@ export default function Home({ data }) {
 
 export async function getStaticProps() {
   try {
-      const items = db.prepare('SELECT * FROM posts ORDER BY id DESC').all();
+  const items = await sql.query('SELECT * FROM posts ORDER BY id DESC');
        let results = [...items];
        const data = results.slice(0, 3);
-    return {
-      props: {
-        data,
-      },
-      revalidate: 3600, 
-    };
+      return {
+        props: {
+         data: JSON.parse(JSON.stringify(data)), 
+        },
+      }
   } catch (error) {
     console.error('Database fetch failed:', error);
     return {
